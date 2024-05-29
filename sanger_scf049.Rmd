@@ -134,6 +134,7 @@ r_all_fasta <- r_all %>%
 # convert to format for DECIPHER and reverse complement the reverse sequence
 f_all_fasta_sub <- f_all_fasta %>%
   mutate(sequence = case_when(str_detect(label, "49-1_Cob") ~ str_sub(sequence, start = 30, end = 930),
+                              str_detect(label, "55-1_Cob") ~ str_sub(sequence, start = 30, end = 930),
                               str_detect(label, "49-2_Cob") ~ str_sub(sequence, start = 30, end = 930),
                               str_detect(label, "49-3_Cob") ~ str_sub(sequence, start = 30, end = 890),
                               str_detect(label, "49-1_Cox1") ~ str_sub(sequence, start = 30, end = 980),
@@ -145,6 +146,7 @@ f_all_fasta_sub <- f_all_fasta %>%
                               str_detect(label, "49-1_cp23S") ~ str_sub(sequence, start = 30, end = 570),
                               str_detect(label, "49-2_cp23S") ~ str_sub(sequence, start = 30, end = 570),
                               str_detect(label, "49-3_cp23S") ~ str_sub(sequence, start = 30, end = 570),
+                              str_detect(label, "55-1_cp23S") ~ str_sub(sequence, start = 30, end = 570),
                               str_detect(label, "49-1_LSU") ~ str_sub(sequence, start = 30, end = 610),
                               str_detect(label, "49-2_LSU") ~ str_sub(sequence, start = 30, end = 610),
                               str_detect(label, "49-3_LSU") ~ str_sub(sequence, start = 30, end = 610),
@@ -156,6 +158,7 @@ f_all_fasta_sub <- f_all_fasta %>%
 
 r_all_fasta_sub <- r_all_fasta %>%
   mutate(sequence = case_when(str_detect(label, "49-1_Cob") ~ str_sub(sequence, start = 30, end = 910),
+                              str_detect(label, "55-1_Cob") ~ str_sub(sequence, start = 30, end = 910),
                               str_detect(label, "49-2_Cob") ~ str_sub(sequence, start = 30, end = 910),
                               str_detect(label, "49-3_Cob") ~ str_sub(sequence, start = 30, end = 910),
                               str_detect(label, "49-1_Cox1") ~ str_sub(sequence, start = 30, end = 980),
@@ -165,6 +168,7 @@ r_all_fasta_sub <- r_all_fasta %>%
                               str_detect(label, "55-4_Cox1") ~ str_sub(sequence, start = 30, end = 980),
                               str_detect(label, "55-5_Cox1") ~ str_sub(sequence, start = 30, end = 980),
                               str_detect(label, "49-1_cp23S") ~ str_sub(sequence, start = 30, end = 570),
+                              str_detect(label, "55-1_cp23S") ~ str_sub(sequence, start = 30, end = 570),
                               str_detect(label, "49-2_cp23S") ~ str_sub(sequence, start = 30, end = 570),
                               str_detect(label, "49-3_cp23S") ~ str_sub(sequence, start = 30, end = 570),
                               str_detect(label, "49-1_LSU") ~ str_sub(sequence, start = 30, end = 600),
@@ -284,7 +288,7 @@ for(i in 1:length(align_list_final)){
   consensus_list[[i]] <- a_con
 }
 
-sequence_names <- c("SCF049-1-Cob", "SCF049-2-Cob", "SCF049-3-Cob", "SCF049-1-Cox1", "SCF049-2-Cox1", "SCF049-3-Cox1","SCF055-1-Cox1", "SCF055-4-Cox1", "SCF055-5-Cox1", "SCF049-1-cp23s", "SCF049-2-cp23s", "SCF049-3-cp23s","SCF049-1-LSU", "SCF049-2-LSU", "SCF049-3-LSU","SCF055-1-LSU", "SCF055-4-LSU", "SCF055-5-LSU", "diosanto")
+sequence_names <- c("SCF049-1-Cob", "SCF049-2-Cob", "SCF049-3-Cob","SCF055-1-Cob", "SCF049-1-Cox1", "SCF049-2-Cox1", "SCF049-3-Cox1","SCF055-1-Cox1", "SCF055-4-Cox1", "SCF055-5-Cox1", "SCF049-1-cp23s", "SCF049-2-cp23s", "SCF049-3-cp23s","SCF055-1-cp23s","SCF049-1-LSU", "SCF049-2-LSU", "SCF049-3-LSU","SCF055-1-LSU", "SCF055-4-LSU", "SCF055-5-LSU", "diosanto")
 write_fasta(consensus_list, sequence_names, "consensus_sequences.fasta")
 ```
 
@@ -436,11 +440,188 @@ p3 <- ggplot(long_sequences, aes(y = sample_id, x = x)) +
     xlab("Position")
 p3
 
-ggsave("psbA_allignment_try.pdf", plot = p3, device="pdf", width = 10, height = 4)
-
+ggsave("psbA_allignment_049_055.pdf", plot = p3, device="pdf", width = 10, height = 4)
 
 ```
 
 
+#psbA consensus 
+```{r}
+align_list_final <- align_psba_R[-4] #removal SCF055 sequence
+consensus <- ConsensusSequence(align_list_final)
+names(consensus) <- "SCF049-1-psbA"
+trimmed_consensus <- subseq(consensus, start = 870, end = 1050) #trim to the matching region only
+writeXStringSet(trimmed_consensus, "consensus_psbA_049.fasta")
+
+align_list_final2 <- align_psba_R[4] #removal SCF055 sequence
+names(align_list_final2) <- "SCF055-1-psbA"
+trimmed_consensus2 <- subseq(align_list_final2, start = 870, end = 1050) #trim to the matching region only
+writeXStringSet(trimmed_consensus2, "consensus_psbA_055.fasta")
+
+
+```
+
+#Create a unique fasta file with all the consensus sequence for all the markers
+```{r}
+consensus_sequences <- readDNAStringSet("consensus_sequences.fasta")
+consensus_psbA_049 <- readDNAStringSet("consensus_psbA_049.fasta")
+consensus_psbA_055 <- readDNAStringSet("consensus_psbA_055.fasta")
+
+# Combine the DNAStringSets
+combined_sequences <- c(consensus_sequences, consensus_psbA_049, consensus_psbA_055)
+writeXStringSet(combined_sequences, filepath = "final_sequences.fasta")
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#Treat psbA ab1 files - not used since I have txt but for further need. This code read txt and ab1 files, pull the sequences, merge them together, align and plot.
+
+```{r}
+ab1_for <- list.files(path = "/Users/bross/Desktop/AIMS/Analysis/sanger_analysis/psba_055", pattern = "\\F.ab1$", full.names = TRUE)
+
+ab1_rev <- list.files(path = "/Users/bross/Desktop/AIMS/Analysis/sanger_analysis/psba_055", pattern = "\\R.ab1$", full.names = TRUE)
+
+read_ab1_df <- function(file) {
+    ab1_data <- read.abif(file)
+    if (inherits(ab1_data, "abif")) {
+        seq <- as.character(sangerseqR::primarySeq(sangerseqR::sangerseq(ab1_data)))
+        return(data.frame(label = basename(file), sequence = seq, stringsAsFactors = FALSE))
+    } else {
+        stop("The file does not seem to be a valid AB1 file.")
+    }
+}
+
+f_ab1_fasta <- ab1_for %>%
+  map(read_ab1_df) %>%
+  reduce(rbind)
+
+r_ab1_fasta <- ab1_rev %>%
+  map(read_ab1_df) %>%
+  reduce(rbind)
+
+combined_fasta <- bind_rows(f_ab1_fasta, r_ab1_fasta)
+
+
+psbaF_fasta_sub <- combined_fasta_f %>%
+  mutate(sequence = case_when(str_detect(label, "49-1") ~ str_sub(sequence, start = 40, end = 560),
+                              str_detect(label, "49-2") ~ str_sub(sequence, start = 40, end = 610),
+                              str_detect(label, "49-3") ~ str_sub(sequence, start = 40, end = 530),
+                              TRUE ~ str_sub(sequence, start = 30, end = 600)))
+
+
+psbaR_fasta_sub <- combined_fasta_r%>%
+  mutate(sequence = case_when(str_detect(label, "49-1") ~ str_sub(sequence, start = 20, end = 1080),
+                              str_detect(label, "49-2") ~ str_sub(sequence, start = 20, end = 520),
+                              str_detect(label, "49-3") ~ str_sub(sequence, start = 20, end = 640),
+           TRUE ~ str_sub(sequence, start = 30, end = 800)))
+
+f_psba_ab1 <- combined_fasta %>%
+  deframe() %>%
+  as_dna() %>%
+  dna_to_DNAStringset() %>%
+  reverseComplement() %>%
+  AlignSeqs()
+
+aligned_df_55 <- data.frame(
+  label = names(f_psba_ab1),
+  sequence = as.character(f_psba_ab1),
+  stringsAsFactors = FALSE
+)
+
+aligned_plotting_2 <- aligned_df_55 %>%
+  mutate(sample_id = str_sub(label, 17, 25)) %>%
+   mutate(label = str_sub(label, 32, 32)) %>%
+  rownames_to_column(var = "row_number")
+
+    
+# Create profile key
+key <- aligned_plotting_2 %>%
+  tibble::rownames_to_column(var = "id")
+
+# Create long dataframe for ggplot
+long_sequences <- str_split(aligned_plotting_2$sequence, "") %>%
+  reshape2::melt() %>%
+  group_by(L1) %>%
+  mutate(x = row_number(),
+         L1 = as.character(L1)) %>%
+  left_join(., key, by = c("L1" = "id")) %>%
+  ungroup()
+
+# Plot alignment
+p3 <- ggplot(long_sequences, aes(y = label, x = x)) +
+  geom_tile(aes(fill = value), size = 1) +
+  geom_vline(xintercept = seq(50, max(long_sequences$x), by = 50), color = "black", linetype = "dashed", size = 0.05) +
+  scale_fill_manual(values = palette, name = "base") +
+  theme(
+    aspect.ratio = 0.3,
+    axis.title.y = element_blank(),
+    strip.text = element_text(margin = margin(0, 0, 10, 0)), # Add space below strip text
+    strip.background = element_blank(), # Remove strip background
+    strip.placement = "outside",
+    axis.text.x = element_text(size = 0.5),
+    axis.ticks.length = unit(0.1, "cm")
+  ) +
+  scale_x_continuous(expand = c(0, 0), breaks = seq(min(long_sequences$x), max(long_sequences$x), by = 100)) +
+  xlab("Position")
+
+p3
+
+
+ggsave("psbA_allignment_055.pdf", plot = p3, device="pdf", width = 10, height = 4)
+
+
+aligned_plotting_2 <- aligned_plotting_2 %>% select(-row_number)
+joined <- rbind(aligned_plotting, aligned_plotting_2)
+
+
+key <- joined %>%
+  tibble::rownames_to_column(var = "id")
+
+key$id <- ifelse(key$id == 2, 3, ifelse(key$id == 3, 2, key$id))
+key$id <- ifelse(key$id == 5, 6, ifelse(key$id == 6, 5, key$id))
+
+# Create long dataframe for ggplot
+long_sequences <- str_split(joined$sequence, "") %>%
+  reshape2::melt() %>%
+  group_by(L1) %>%
+  mutate(x = row_number(),
+         L1 = as.character(L1)) %>%
+  left_join(., key, by = c("L1" = "id")) %>%
+  ungroup()
+
+# Plot alignment
+p3 <- ggplot(long_sequences, aes(y = sample_id, x = x)) +
+      geom_tile(aes(fill = value), size = 1, name = "base") +
+      facet_wrap(~ label, nrow = 3, scales = "free") +
+      geom_vline(xintercept = seq(50, max(long_sequences$x), by = 50), color = "black", linetype = "dashed", size = 0.05) +
+      scale_fill_manual(values = palette) +
+      theme(aspect.ratio = 0.3,
+            axis.title.y = element_blank(),
+        strip.text = element_text(margin = margin(0, 0, 10, 0)), # Add space below strip text
+        strip.background = element_blank(), # Remove strip background
+        strip.placement = "outside",
+        axis.text.x = element_text(size = 0.5),
+         axis.ticks.width = unit(0.1, "cm"))+
+      scale_x_continuous(expand = c(0, 0), breaks = seq(min(long_sequences$x), max(long_sequences$x), by = 100)) +
+    xlab("Position")
+p3
+
+```
 
 
